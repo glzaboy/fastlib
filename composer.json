@@ -14,7 +14,7 @@
 	"psr-4":{
             "fl\\":"src/lib/"
 	},
-	"file":[
+	"files":[
              "src/fl.php"
 	]
      }
