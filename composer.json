@@ -1,0 +1,13 @@
+{
+    "name": "glzaboy/fastlib",
+    "description": "php fastlib fast dev",
+    "type": "libary",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "glzaboy",
+            "email": "glzaboy@163.com"
+        }
+    ],
+    "require": {}
+}
