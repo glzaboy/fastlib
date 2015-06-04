@@ -9,7 +9,10 @@
             "email": "glzaboy@163.com"
         }
     ],
-    "require": {},
+    "require": {
+    	"smarty/smarty" : ">=v3.1.21,<=v3.2.0",
+    	"phpmailer/phpmailer" : "=v5.2.9"
+    },
     "autoload": {
 	"psr-4":{
             "fl\\":"src/lib/"
