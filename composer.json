@@ -1,7 +1,7 @@
 {
     "name": "glzaboy/fastlib",
     "description": "php fastlib fast dev",
-    "type": "libary",
+    "type": "library",
     "license": "GPL",
     "authors": [
         {
@@ -9,5 +9,13 @@
             "email": "glzaboy@163.com"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+	"psr-4":{
+            "fl\\":"src/lib/"
+	},
+	"file":[
+             "src/fl.php"
+	]
+     }
 }
