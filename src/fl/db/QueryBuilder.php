@@ -71,24 +71,16 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
         $this->_prefix = $prefix;
         if ($this->_prefix) {
             $this->enableprefix();
+        } else {
+            $this->disableprefix();
         }
     }
 
-    /**
-     * 启用数据库前缀
-     *
-     * @return boolean
-     */
     public function enableprefix()
     {
         return $this->_enableprefix = true;
     }
 
-    /**
-     * 禁用数据表前缀
-     *
-     * @return boolean
-     */
     public function disableprefix()
     {
         return $this->_enableprefix = false;
@@ -102,11 +94,6 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
             return '';
         }
     }
-
-
-
-
-
 
     /**
      * 处理where SQL条件

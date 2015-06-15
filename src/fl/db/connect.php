@@ -299,13 +299,13 @@ class connect extends object implements Iconnect
      *
      * @param \fl\db\connect $connnect
      *            数据库链接
-     * @return \fl\db\QueryBuilder\mysql\QueryBuilder
+     * @return \fl\db\mysql\QueryBuilder
      */
     function getQueryerBuilder()
     {
         switch ($this->type) {
             case 'mysql':
-                return new \fl\db\QueryBuilder\mysql\QueryBuilder($this);
+                return new \fl\db\mysql\QueryBuilder($this);
                 break;
             default:
         }
