@@ -15,7 +15,7 @@
     },
     "autoload": {
 	"psr-4":{
-            "fl\\":"src/lib/"
+            "fl\\":"src/fl/"
 	},
 	"files":[
              "src/fl.php"
