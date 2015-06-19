@@ -74,4 +74,10 @@ Interface IQueryBuilder
      * @return \PDOStatement
      */
     public function select($table, $condition = null, $item = "*", $orderby, $groupby, $join = array());
+    /**
+     * 返回select 不还limit条件条数
+     * 
+     * @return int
+     */
+    public function selectcount();
 }

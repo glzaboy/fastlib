@@ -49,6 +49,20 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
     /**
      * 数据库链接
      *
+     * @var string
+     */
+    protected $_counsql = '';
+
+    /**
+     * 数据库链接
+     *
+     * @var array
+     */
+    protected $_counbindvalue = array();
+
+    /**
+     * 数据库链接
+     *
      * @var int
      */
     protected $_ipage = 0;

@@ -54,7 +54,6 @@ class QueryBuilder extends \fl\db\QueryBuilder
         return $lastInsertId ? $lastInsertId : $affected;
     }
 
-
     public function update($table, $data = array(), $condition = null)
     {
         $field_set = "";
@@ -81,7 +80,6 @@ class QueryBuilder extends \fl\db\QueryBuilder
         }
         return $affected;
     }
-
 
     public function delete($table, $condition = null)
     {
@@ -155,7 +153,7 @@ class QueryBuilder extends \fl\db\QueryBuilder
                 }
             }
         }
-        if ($this->_ilimit != 0) {
+        if ($this->_ilimit != 0 && $this->_ipage >= 1) {
             $limit = ($this->_ipage - 1) * $this->_ilimit;
             $limit = " LIMIT $limit,$this->_ilimit";
         } else {
@@ -178,6 +176,25 @@ class QueryBuilder extends \fl\db\QueryBuilder
         } else {
             $sql = "SELECT {$item} FROM " . $tablesql . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
         }
+        if ($this->_bcount) {
+            if ($condition) {
+                $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
+            } else {
+                $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' ' . $groupby;
+            }
+            $this->_counbindvalue = $bindvalue;
+        }
         return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
+    }
+
+    public function selectcount()
+    {
+        if ($this->_bcount) {
+            $data = $this->_connect->query($this->_counsql, $this->_counbindvalue, $this->_connect->intransaction())
+                ->fetch();
+            return $data['count'];
+        } else {
+            return - 1;
+        }
     }
 }
