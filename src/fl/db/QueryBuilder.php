@@ -42,13 +42,6 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
     /**
      * 数据库链接
      *
-     * @var boolean
-     */
-    protected $_bcount = 0;
-
-    /**
-     * 数据库链接
-     *
      * @var string
      */
     protected $_counsql = '';
@@ -144,18 +137,17 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
         return $return;
     }
 
-    public function setCount($bCount = false)
-    {
-        $this->_bcount = $bCount;
-    }
-
-    public function setlimit($ilimit = 0)
-    {
-        $this->_ilimit = intval($ilimit);
-    }
-
-    public function setpage($ipage = 0)
+    /**
+     * 设置数据分页
+     *
+     * @param number $ilimit
+     *            限制返回条数
+     * @param number $ipage
+     *            数据页码
+     */
+    public function setpager($ilimit = 10, $ipage = 1)
     {
         $this->_ipage = intval($ipage);
+        $this->_ilimit = intval($ilimit);
     }
 }

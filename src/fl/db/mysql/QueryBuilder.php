@@ -172,29 +172,20 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     array_push($bindvalue, $v);
                 }
             }
+            $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
             $sql = "SELECT {$item} FROM " . $tablesql . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby . ' ' . $orderby . $limit;
         } else {
             $sql = "SELECT {$item} FROM " . $tablesql . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
+            $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' ' . $groupby;
         }
-        if ($this->_bcount) {
-            if ($condition) {
-                $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
-            } else {
-                $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' ' . $groupby;
-            }
-            $this->_counbindvalue = $bindvalue;
-        }
+        $this->_counbindvalue = $bindvalue;
         return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
     }
 
     public function selectcount()
     {
-        if ($this->_bcount) {
-            $data = $this->_connect->query($this->_counsql, $this->_counbindvalue, $this->_connect->intransaction())
-                ->fetch();
-            return $data['count'];
-        } else {
-            return - 1;
-        }
+        $data = $this->_connect->query($this->_counsql, $this->_counbindvalue, $this->_connect->intransaction())
+            ->fetch();
+        return $data['count'];
     }
 }
