@@ -137,8 +137,17 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
                 if (is_string($k) && $valueasfiled) {
                     $bindwherestring .= $this->gettable($k) . '=' . $this->gettable($v) . ' AND ';
                 } elseif (is_string($k)) {
-                    $bindwherestring .= $this->gettable($k) . '=? AND ';
-                    array_push($bindwherearray, $v);
+                    if (is_string($v)) {
+                        $bindwherestring .= $this->gettable($k) . '=? AND ';
+                        array_push($bindwherearray, $v);
+                    } elseif (is_array($v)) {
+                        /* 创建一个填充了和params相同数量占位符的字符串 */
+                        $place_holders = implode(',', array_fill(0, count($v), '?'));
+                        $bindwherestring .= $this->gettable($k) . ' IN (' . $place_holders . ') AND ';
+                        foreach ($v as $tmpparams){
+                            array_push($bindwherearray, $tmpparams);
+                        }
+                    }
                 }
             }
         } elseif (is_string($condition)) {
