@@ -115,24 +115,24 @@ class QueryBuilder extends \fl\db\QueryBuilder
     public function select($table, $condition = null, $item = "*", $orderby = '', $groupby = '', $join = array())
     {
         $bindvalue = array();
-        if ($item == "") {
-            $item = "*";
+        if(empty($item)){
+            $item='*';
         }
         if (is_array($item)) {
+            foreach ($item as $k => $v) {
+                $tmp = $this->gettable($v);
+                if (is_string($k)) {
+                    $tmp .= ' AS ' . $this->left_delimiter . $k . $this->right_delimiter;
+                }
+                $item[$k] = $tmp;
+            }
             $item = @implode(" , ", $item);
         }
         $joinstr = "";
         if (is_array($join)) {
             foreach ($join as $key => $value) {
-                list ($jointable, $as) = explode(" ", $key);
-                if ($jointable && $as) {
-                    $tablesql = $this->left_delimiter . $this->getprefix() . $jointable . $this->right_delimiter . ' AS ' . $this->left_delimiter . $as . $this->right_delimiter;
-                } else {
-                    $tablesql = $this->left_delimiter . $this->getprefix() . $jointable . $this->right_delimiter;
-                }
-                if (is_string($value)) {
-                    $joinstr .= " LEFT JOIN {$tablesql} ON (" . $value . ') ';
-                } else {
+                $jointtype = 'LEFT';
+                if (is_array($value) && count($value) >= 2) {
                     if (isset($value[0]) && in_array(strtolower($value['0']), array(
                         'left',
                         'right',
@@ -144,8 +144,12 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     } else {
                         $jointtype = 'LEFT';
                     }
-                    $tmpcondition = $this->processcondition($value);
-                    $joinstr .= "{$jointtype} JOIN {$tablesql} ON (" . $tmpcondition['condition'] . ')';
+                }
+                if (is_string($value)) {
+                    $joinstr .= $jointtype . ' JOIN ' . $this->gettable($key) . ' ON (' . $value . ') ';
+                } elseif (is_array($value) && count($value) >= 1) {
+                    $tmpcondition = $this->processcondition($value, true);
+                    $joinstr .= $jointtype . ' JOIN ' . $this->gettable($key) . " ON (" . $tmpcondition['condition'] . ')';
                     foreach ($tmpcondition['bindvalue'] as $v) {
                         array_push($bindvalue, $v);
                     }

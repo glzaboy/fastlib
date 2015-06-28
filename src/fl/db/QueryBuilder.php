@@ -102,6 +102,19 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
         }
     }
 
+    public function gettable($table)
+    {
+        if (strpos($table, '.')) {
+            $field = true;
+            list ($table, $field) = explode('.', $table);
+            if ($table && $field) {
+                return $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter . '.' . $this->left_delimiter . $field . $this->right_delimiter;
+            }
+        } else {
+            return $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter;
+        }
+    }
+
     /**
      * 处理where SQL条件
      *
@@ -110,20 +123,22 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
      *            表名
      * @return array 处理后的条件
      */
-    protected function processcondition($condition)
+    protected function processcondition($condition, $valueasfiled = false)
     {
         $bindwherestring = "";
         $bindwherearray = array();
         $return = array();
         if (is_array($condition)) {
             foreach ($condition as $k => $v) {
-                if (is_string($k)) {
-                    $bindwherestring .= strtr($this->left_delimiter . $k . $this->right_delimiter . '=?', array(
-                        '.' => $this->right_delimiter . '.' . $this->left_delimiter
-                    )) . ' AND ';
-                    array_push($bindwherearray, $v);
-                } else {
+                if (! is_string($k) && $k) {
                     $bindwherestring .= '(' . $v . ')' . ' AND ';
+                    continue;
+                }
+                if (is_string($k) && $valueasfiled) {
+                    $bindwherestring .= $this->gettable($k) . '=' . $this->gettable($v) . ' AND ';
+                } elseif (is_string($k)) {
+                    $bindwherestring .= $this->gettable($k) . '=? AND ';
+                    array_push($bindwherearray, $v);
                 }
             }
         } elseif (is_string($condition)) {
