@@ -5,6 +5,20 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
 {
 
     /**
+     * 锁定只允许读取
+     *
+     * @var int
+     */
+    const LOCK_FOR_SHARE = 1;
+
+    /**
+     * 锁定不允许读取
+     *
+     * @var int
+     */
+    const LOCK_FOR_WRITE = 2;
+
+    /**
      * 字段左分隔符
      *
      * @var string

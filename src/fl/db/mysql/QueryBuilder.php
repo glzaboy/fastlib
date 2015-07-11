@@ -112,6 +112,9 @@ class QueryBuilder extends \fl\db\QueryBuilder
 
     public function select($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
+        foreach ($otherinfo as $k => $v) {
+            $otherinfo[strtolower($k)] = $v;
+        }
         $bindvalue = array();
         if (empty($item)) {
             $item = '*';
@@ -198,7 +201,12 @@ class QueryBuilder extends \fl\db\QueryBuilder
             $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby;
         }
         $this->_counbindvalue = $bindvalue;
-        return $this->_connect->query($sql . ' FOR UPDATE', $bindvalue, $this->_connect->intransaction());
+        if ($otherinfo['LOCK'] == self::LOCK_FOR_WRITE) {
+            $sql . ' FOR UPDATE';
+        } elseif ($otherinfo['LOCK'] == self::LOCK_FOR_SHARE) {
+            $sql . ' lock in share mode';
+        }
+        return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
     }
 
     public function selectcount()
