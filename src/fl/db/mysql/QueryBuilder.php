@@ -195,7 +195,6 @@ class QueryBuilder extends \fl\db\QueryBuilder
             }
             $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
             $sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby . ' ' . $orderby . $limit;
-            echo $sql;
         } else {
             $sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
             $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby;
