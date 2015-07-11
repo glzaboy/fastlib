@@ -64,20 +64,30 @@ Interface IQueryBuilder
 
     /**
      * 选择数据库记录
-     * 
-     * @param $table 表名            
-     * @param $condition 条件            
-     * @param $item 字段            
-     * @param $orderby 排序            
-     * @param $groupby 分组            
-     * @param $join 联表            
+     *
+     * @param string $table
+     *            表名
+     * @param string|array $condition
+     *            条件
+     * @param string|array $item
+     *            字段
+     * @param string|array $orderby
+     *            排序
+     * @param string|array $groupby
+     *            分组
+     * @param array $join
+     *            联表
+     * @param array $otherinfo            
      * @return \PDOStatement
      */
-    public function select($table, $condition = null, $item = "*", $orderby, $groupby, $join = array());
+    public function select($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array());
+
     /**
      * 返回select 不还limit条件条数
-     * 
+     *
      * @return int
      */
-    public function selectcount();
+    public 
+
+    function selectcount();
 }

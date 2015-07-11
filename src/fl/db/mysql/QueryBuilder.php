@@ -36,16 +36,14 @@ class QueryBuilder extends \fl\db\QueryBuilder
     public function insert($table, $data = array())
     {
         $field_list = "";
-        $value_list = "";
+        $value_list = implode(',', array_fill(0, count($data), '?'));
         $bindvalue = array();
         foreach ($data as $k => $v) {
-            $field_list .= $this->left_delimiter . $k . $this->right_delimiter . ',';
-            $value_list .= '?,';
+            $field_list .= $this->quotefield($k) . ',';
             array_push($bindvalue, $v);
         }
         $field_list = substr($field_list, 0, - 1);
-        $value_list = substr($value_list, 0, - 1);
-        $sql = 'INSERT INTO ' . $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter . ' (' . $field_list . ') VALUES (' . $value_list . ');';
+        $sql = 'INSERT INTO ' . $this->quotetable($table) . ' (' . $field_list . ') VALUES (' . $value_list . ');';
         $affected = $this->_connect->exec($sql, $bindvalue, true);
         if ($affected === false) {
             return false;
@@ -59,7 +57,7 @@ class QueryBuilder extends \fl\db\QueryBuilder
         $field_set = "";
         $bindvalue = array();
         foreach ($data as $k => $v) {
-            $field_set .= $this->left_delimiter . $k . $this->right_delimiter . '=?,';
+            $field_set .= $this->quotefield($k) . '=?,';
             array_push($bindvalue, $v);
         }
         $field_set = substr($field_set, 0, - 1);
@@ -70,9 +68,9 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     array_push($bindvalue, $v);
                 }
             }
-            $sql = 'UPDATE ' . $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter . ' SET ' . $field_set . ' WHERE ' . $condition['condition'];
+            $sql = 'UPDATE ' . $this->quotetable($table) . ' SET ' . $field_set . ' WHERE ' . $condition['condition'];
         } else {
-            $sql = 'UPDATE ' . $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter . ' SET ' . $field_set;
+            $sql = 'UPDATE ' . $this->quotetable($table) . ' SET ' . $field_set;
         }
         $affected = $this->_connect->exec($sql, $bindvalue, true);
         if ($affected === false) {
@@ -91,9 +89,9 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     array_push($bindvalue, $v);
                 }
             }
-            $sql = 'DELETE FROM ' . $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter . ' WHERE ' . $condition['condition'];
+            $sql = 'DELETE FROM ' . $this->quotetable($table) . ' WHERE ' . $condition['condition'];
         } else {
-            $sql = 'DELETE FROM ' . $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter;
+            $sql = 'DELETE FROM ' . $this->quotetable($table);
         }
         $affected = $this->_connect->exec($sql, $bindvalue, true);
         if ($affected === false) {
@@ -112,18 +110,15 @@ class QueryBuilder extends \fl\db\QueryBuilder
         return $fileds;
     }
 
-    public function select($table, $condition = null, $item = "*", $orderby = '', $groupby = '', $join = array())
+    public function select($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
         $bindvalue = array();
-        if(empty($item)){
-            $item='*';
+        if (empty($item)) {
+            $item = '*';
         }
         if (is_array($item)) {
             foreach ($item as $k => $v) {
-                $tmp = $this->gettable($v);
-                if (is_string($k)) {
-                    $tmp .= ' AS ' . $this->left_delimiter . $k . $this->right_delimiter;
-                }
+                $tmp = $this->quotefield($v);
                 $item[$k] = $tmp;
             }
             $item = @implode(" , ", $item);
@@ -163,11 +158,30 @@ class QueryBuilder extends \fl\db\QueryBuilder
         } else {
             $limit = '';
         }
-        @list ($seltable, $as) = explode(" ", $table);
-        if ($seltable && $as) {
-            $tablesql = $this->left_delimiter . $this->getprefix() . $seltable . $this->right_delimiter . ' AS ' . $this->left_delimiter . $as . $this->right_delimiter;
-        } else {
-            $tablesql = $this->left_delimiter . $this->getprefix() . $seltable . $this->right_delimiter;
+        if (! $orderby) {
+            $orderby = "";
+        }
+        if (is_array($orderby)) {
+            $tmporderby = 'ORDER BY ';
+            foreach ($orderby as $val) {
+                if (substr($val, 0, 1) == '!') {
+                    $tmporderby .= $this->quotefield(substr($val, 1)) . ' DESC,';
+                } else {
+                    $tmporderby .= $this->quotefield($val) . ' ASC,';
+                }
+            }
+            $orderby = substr($tmporderby, 0, - 1);
+            unset($tmporderby);
+        }
+        if (! $groupby) {
+            $groupby = "";
+        }
+        if (is_array($groupby)) {
+            $tmporderby = 'GROUP BY ';
+            foreach ($groupby as $val) {
+                $tmporderby .= $this->quotefield($val) . ',';
+            }
+            $groupby = substr($tmporderby, 0, - 1);
         }
         if ($condition) {
             $condition = $this->processcondition($condition);
@@ -176,14 +190,15 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     array_push($bindvalue, $v);
                 }
             }
-            $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
-            $sql = "SELECT {$item} FROM " . $tablesql . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby . ' ' . $orderby . $limit;
+            $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
+            $sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby . ' ' . $orderby . $limit;
+            echo $sql;
         } else {
-            $sql = "SELECT {$item} FROM " . $tablesql . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
-            $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $tablesql . $joinstr . ' ' . $groupby;
+            $sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
+            $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby;
         }
         $this->_counbindvalue = $bindvalue;
-        return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
+        return $this->_connect->query($sql . ' FOR UPDATE', $bindvalue, $this->_connect->intransaction());
     }
 
     public function selectcount()

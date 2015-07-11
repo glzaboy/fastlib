@@ -102,17 +102,40 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
         }
     }
 
-    public function gettable($table)
+    public function quotetable($inputtable)
     {
-        if (strpos($table, '.')) {
-            $field = true;
-            list ($table, $field) = explode('.', $table);
-            if ($table && $field) {
-                return $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter . '.' . $this->left_delimiter . $field . $this->right_delimiter;
-            }
-        } else {
-            return $this->left_delimiter . $this->getprefix() . $table . $this->right_delimiter;
+        $return = '';
+        if (strpos($inputtable, ' ')) {
+            list ($inputtable, $as) = explode(' ', $inputtable);
+            $return = ' AS ' . $this->left_delimiter . $as . $this->right_delimiter;
         }
+        if (strpos($inputtable, '.')) { // table.field as
+            list ($inputtable, $field) = explode('.', $inputtable);
+            $return = $this->left_delimiter . $this->getprefix() . $inputtable . $this->right_delimiter . '.' . $this->left_delimiter . $field . $this->right_delimiter . $return;
+        } else {
+            $return = $this->left_delimiter . $this->getprefix() . $inputtable . $this->right_delimiter . $return;
+        }
+        return $return;
+    }
+
+    public function quotefield($inputtable)
+    {
+        $return = '';
+        if (strpos($inputtable, ' ')) { // as
+            list ($inputtable, $as) = explode(' ', $inputtable);
+            $return = ' AS ' . $this->left_delimiter . $as . $this->right_delimiter;
+        }
+        if (strpos($inputtable, '.')) { // table.field
+            list ($inputtable, $field) = explode('.', $inputtable);
+            $return = $this->left_delimiter . $this->getprefix() . $inputtable . $this->right_delimiter . '.' . $this->left_delimiter . $field . $this->right_delimiter . $return;
+        } else {
+            if (preg_match('/[\(|\)]/', $inputtable)) {
+                $return = $inputtable . ' ' . $return;
+            } else {
+                $return = $this->left_delimiter . $inputtable . $this->right_delimiter . $return;
+            }
+        }
+        return $return;
     }
 
     /**
@@ -135,16 +158,16 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
                     continue;
                 }
                 if (is_string($k) && $valueasfiled) {
-                    $bindwherestring .= $this->gettable($k) . '=' . $this->gettable($v) . ' AND ';
+                    $bindwherestring .= $this->quotefield($k) . '=' . $this->quotefield($v) . ' AND ';
                 } elseif (is_string($k)) {
-                    if (is_string($v)) {
-                        $bindwherestring .= $this->gettable($k) . '=? AND ';
+                    if (is_scalar($v)) {
+                        $bindwherestring .= $this->quotefield($k) . '=? AND ';
                         array_push($bindwherearray, $v);
                     } elseif (is_array($v)) {
                         /* 创建一个填充了和params相同数量占位符的字符串 */
                         $place_holders = implode(',', array_fill(0, count($v), '?'));
-                        $bindwherestring .= $this->gettable($k) . ' IN (' . $place_holders . ') AND ';
-                        foreach ($v as $tmpparams){
+                        $bindwherestring .= $this->quotefield($k) . ' IN (' . $place_holders . ') AND ';
+                        foreach ($v as $tmpparams) {
                             array_push($bindwherearray, $tmpparams);
                         }
                     }
