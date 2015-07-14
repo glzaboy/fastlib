@@ -144,10 +144,10 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     }
                 }
                 if (is_string($value)) {
-                    $joinstr .= $jointtype . ' JOIN ' . $this->gettable($key) . ' ON (' . $value . ') ';
+                    $joinstr .= $jointtype . ' JOIN ' . $this->quotetable($key) . ' ON (' . $value . ') ';
                 } elseif (is_array($value) && count($value) >= 1) {
                     $tmpcondition = $this->processcondition($value, true);
-                    $joinstr .= $jointtype . ' JOIN ' . $this->gettable($key) . " ON (" . $tmpcondition['condition'] . ')';
+                    $joinstr .= $jointtype . ' JOIN ' . $this->quotetable($key) . " ON (" . $tmpcondition['condition'] . ')';
                     foreach ($tmpcondition['bindvalue'] as $v) {
                         array_push($bindvalue, $v);
                     }
@@ -200,10 +200,12 @@ class QueryBuilder extends \fl\db\QueryBuilder
             $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby;
         }
         $this->_counbindvalue = $bindvalue;
-        if ($otherinfo['LOCK'] == self::LOCK_FOR_WRITE) {
-            $sql . ' FOR UPDATE';
-        } elseif ($otherinfo['LOCK'] == self::LOCK_FOR_SHARE) {
-            $sql . ' lock in share mode';
+        if (isset($otherinfo['LOCK'])) {
+            if ($otherinfo['LOCK'] == self::LOCK_FOR_WRITE) {
+                $sql . ' FOR UPDATE';
+            } elseif ($otherinfo['LOCK'] == self::LOCK_FOR_SHARE) {
+                $sql . ' lock in share mode';
+            }
         }
         return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
     }
