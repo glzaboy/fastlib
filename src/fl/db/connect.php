@@ -170,10 +170,10 @@ abstract class connect extends object implements Iconnect
         if (FL_DEBUG) {
             $this->lastsql = $sql . ' BIND Value :' . var_export($bindparams, true);
         }
-        if($ismaster){
-            $pdo=$this->getmasterpdo();
-        }else{
-            $pdo=$this->getslavepdo();
+        if ($ismaster) {
+            $pdo = $this->getmasterpdo();
+        } else {
+            $pdo = $this->getslavepdo();
         }
         if (! $pdo) {
             return false;
@@ -196,7 +196,10 @@ abstract class connect extends object implements Iconnect
         $s_cfg = \fl\cfg\cfg::instance('db/' . $dbcfg, 'ini');
         switch (strtolower($s_cfg->get('main', 'type'))) {
             case 'mysql':
-                return new \fl\db\mysql\connect($dbcfg);
+                return new mysql\connect($dbcfg);
+                break;
+            case 'sqlite':
+                return new sqlite\connect($dbcfg);
                 break;
             default:
         }
@@ -206,13 +209,16 @@ abstract class connect extends object implements Iconnect
      *
      * @param \fl\db\connect $connnect
      *            数据库链接
-     * @return \fl\db\mysql\QueryBuilder
+     * @return \fl\db\mysql\QueryBuilder|sqlite\QueryBuilder
      */
     function getQueryerBuilder()
     {
         switch ($this->type) {
             case 'mysql':
-                return new \fl\db\mysql\QueryBuilder($this);
+                return new mysql\QueryBuilder($this);
+                break;
+            case 'sqlite':
+                return new sqlite\QueryBuilder($this);
                 break;
             default:
         }
