@@ -3,7 +3,7 @@ namespace fl\db;
 
 use fl\base\object;
 
-class connect extends object implements Iconnect
+abstract class connect extends object implements Iconnect
 {
 
     /**
@@ -107,117 +107,9 @@ class connect extends object implements Iconnect
         return transaction::inTransation($this->_dbhash);
     }
 
-    /**
-     * 连接数据库
-     *
-     * @return \PDO
-     */
-    /**
-     *
-     * @param string $ismaster            
-     * @throws \Exception
-     * @return boolean|\PDO
-     */
     public function getconnect($ismaster = null)
     {
-        if (! $this->dbexist()) {
-            throw new \Exception('db config error.', - 1);
-        }
-        // 主从库连接策略
-        if ($this->disableMaster === 1 && $this->disableSlave === 1) {
-            throw new \Exception('db config error.', - 1);
-        }
-        if ($this->disableMaster === 0) {
-            $dbmain = $this->cfg->get('main');
-            if (trim($dbmain['master']) === '') {
-                $this->disableMaster = 1;
-            } else {
-                $this->disableMaster = - 1;
-            }
-        }
-        if ($this->disableMaster === 1 && $ismaster) {
-            throw new \Exception('master db not enable.', - 2);
-        }
-        if ($this->disableSlave === 0) {
-            $dbmain = $this->cfg->get('main');
-            if (trim($dbmain['slave']) === '') {
-                $this->disableSlave = 1;
-            } else {
-                $this->disableSlave = - 1;
-            }
-        }
-        if ($this->disableSlave === 1 && ! $ismaster) {
-            throw new \Exception('Slave db not enable.', - 2);
-        }
-        if ($this->disableMaster === 1 && $this->disableSlave === 1) {
-            throw new \Exception('db config error.', - 3);
-        }
-        if (! in_array($this->cfg->get('main', 'type'), \PDO::getAvailableDrivers())) {
-            throw new \Exception('not support db.', - 4);
-        }
-        if ($ismaster && $this->disableMaster === - 1) {
-            if (isset(connect::$connections[$this->_dbhash]['master']) && connect::$connections[$this->_dbhash]['master']->getAttribute(\PDO::ATTR_CONNECTION_STATUS)) {
-                return connect::$connections[$this->_dbhash]['master'];
-            }
-            try {
-                $dbcfg = $this->cfg->get($this->cfg->get('main', 'master'));
-                if (! $dbcfg) {
-                    throw new \Exception('master db not enable.', - 2);
-                }
-                $pdo = new \PDO($this->cfg->get('main', 'type') . ':' . $dbcfg['dsn'], $dbcfg['user'], $dbcfg['passwd'], array(
-                    \PDO::ATTR_TIMEOUT => 1
-                ));
-                if (! $pdo->getAttribute(\PDO::ATTR_CONNECTION_STATUS)) {
-                    throw new \Exception('db connect error.', - 2);
-                }
-                $dbinit = $this->cfg->get($this->cfg->get('main', 'init'));
-                foreach ($dbinit as $cmd) {
-                    $pdo->exec($cmd);
-                }
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage(), $e->getCode());
-            }
-            connect::$connections[$this->_dbhash]['master'] = $pdo;
-            \fl\helpers\hook::runhook('DB:AfterConnect', array(
-                $this->_dbhash,
-                $ismaster
-            ));
-            return connect::$connections[$this->_dbhash]['master'];
-        } elseif (! $ismaster && $this->disableSlave == - 1) {
-            if (isset(connect::$connections[$this->_dbhash]['slave']) && connect::$connections[$this->_dbhash]['slave']->getAttribute(\PDO::ATTR_CONNECTION_STATUS)) {
-                return connect::$connections[$this->_dbhash]['slave'];
-            }
-            try {
-                $slaves = $this->cfg->get('main', 'slave');
-                if (! $slaves) {
-                    throw new \Exception('slave db not enable.', - 2);
-                }
-                $slaves = explode(',', $slaves);
-                shuffle($slaves);
-                $dbcfg = $this->cfg->get($slaves[0]);
-                $pdo = new \PDO($this->cfg->get('main', 'type') . ':' . $dbcfg['dsn'], $dbcfg['user'], $dbcfg['passwd'], array(
-                    \PDO::ATTR_TIMEOUT => 1
-                ));
-                if (! $pdo->getAttribute(\PDO::ATTR_CONNECTION_STATUS)) {
-                    throw new \Exception('db connect error.', - 2);
-                }
-                $dbinit = $this->cfg->get($this->cfg->get('main', 'init'));
-                foreach ($dbinit as $cmd) {
-                    $pdo->exec($cmd);
-                }
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage(), $e->getCode());
-            }
-            connect::$connections[$this->_dbhash]['slave'] = $pdo;
-            \fl\helpers\hook::runhook('DB:AfterConnect', array(
-                $this->_dbhash,
-                $ismaster
-            ));
-            return connect::$connections[$this->_dbhash]['slave'];
-        } else {
-            $this->setError("db config error.");
-            return false;
-        }
+        return false;
     }
 
     public function disconnect()
@@ -227,19 +119,19 @@ class connect extends object implements Iconnect
 
     public function beginTransaction()
     {
-        $pdo = $this->getconnect(true);
+        $pdo = $this->getmasterpdo();
         $pdo->beginTransaction();
     }
 
     public function rollback()
     {
-        $pdo = $this->getconnect(true);
+        $pdo = $this->getmasterpdo();
         $pdo->rollBack();
     }
 
     public function commint()
     {
-        $pdo = $this->getconnect(true);
+        $pdo = $this->getmasterpdo();
         $pdo->commit();
     }
 
@@ -278,7 +170,11 @@ class connect extends object implements Iconnect
         if (FL_DEBUG) {
             $this->lastsql = $sql . ' BIND Value :' . var_export($bindparams, true);
         }
-        $pdo = $this->getconnect($ismaster);
+        if($ismaster){
+            $pdo=$this->getmasterpdo();
+        }else{
+            $pdo=$this->getslavepdo();
+        }
         if (! $pdo) {
             return false;
         }
@@ -293,6 +189,17 @@ class connect extends object implements Iconnect
             throw new \PDOException("SQL ERROR." . $sql . ' BIND params :' . var_export($bindparams, true) . $errInfo[2], - 1);
         }
         return $sth;
+    }
+
+    public static function adaptor($dbcfg)
+    {
+        $s_cfg = \fl\cfg\cfg::instance('db/' . $dbcfg, 'ini');
+        switch (strtolower($s_cfg->get('main', 'type'))) {
+            case 'mysql':
+                return new \fl\db\mysql\connect($dbcfg);
+                break;
+            default:
+        }
     }
 
     /**

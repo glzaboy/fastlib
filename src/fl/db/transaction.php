@@ -85,7 +85,7 @@ class transaction extends object
         if (! $isMaster) {
             return;
         }
-        $connect = new \fl\db\connect($dbhash);
+        $connect = \fl\db\connect::adaptor($dbhash);
         $connect->beginTransaction();
     }
 

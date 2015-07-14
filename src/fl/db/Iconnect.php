@@ -27,4 +27,22 @@ interface Iconnect
      * 提交事务
      */
     public function commint();
+
+    /**
+     * 连接数据库
+     *
+     * @param string $ismaster            
+     * @throws \Exception
+     * @return boolean|\PDO
+     */
+    public function getmasterpdo();
+
+    /**
+     * 连接数据库
+     *
+     * @param string $ismaster            
+     * @throws \Exception
+     * @return boolean|\PDO
+     */
+    public function getslavepdo();
 }

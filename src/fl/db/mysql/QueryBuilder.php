@@ -113,7 +113,7 @@ class QueryBuilder extends \fl\db\QueryBuilder
     public function select($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
         foreach ($otherinfo as $k => $v) {
-            $otherinfo[strtolower($k)] = $v;
+            $otherinfo[strtoupper($k)] = $v;
         }
         $bindvalue = array();
         if (empty($item)) {
@@ -202,9 +202,9 @@ class QueryBuilder extends \fl\db\QueryBuilder
         $this->_counbindvalue = $bindvalue;
         if (isset($otherinfo['LOCK'])) {
             if ($otherinfo['LOCK'] == self::LOCK_FOR_WRITE) {
-                $sql . ' FOR UPDATE';
+                $sql .= ' FOR UPDATE';
             } elseif ($otherinfo['LOCK'] == self::LOCK_FOR_SHARE) {
-                $sql . ' lock in share mode';
+                $sql .= ' lock in share mode';
             }
         }
         return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
