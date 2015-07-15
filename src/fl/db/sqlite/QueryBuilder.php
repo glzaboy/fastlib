@@ -14,8 +14,8 @@ class QueryBuilder extends \fl\db\QueryBuilder
      */
     function __construct($connnect)
     {
-        $this->left_delimiter = '';
-        $this->right_delimiter = '';
+        $this->left_delimiter = '"';
+        $this->right_delimiter = '"';
         return parent::__construct($connnect);
     }
 
