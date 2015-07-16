@@ -87,7 +87,5 @@ Interface IQueryBuilder
      *
      * @return int
      */
-    public 
-
-    function selectcount();
+    public function selectcount();
 }

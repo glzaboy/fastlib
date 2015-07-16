@@ -6,7 +6,7 @@ namespace fl\db\mysql;
  * @author guliuzhong
  *        
  */
-class connect extends \fl\db\connect
+final class connect extends \fl\db\connect
 {
 
     function __construct($dbcfg)

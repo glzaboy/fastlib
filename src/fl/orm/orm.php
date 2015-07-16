@@ -1,18 +1,28 @@
 <?php
-/**
- * @author guliuzhong<glzaboy@163.com>
- */
-namespace fl\db;
+namespace fl\orm;
 
 use fl\base\object;
 
+/**
+ *
+ * @author guliuzhong
+ *        
+ */
 class orm extends object
 {
+    /**
+     */
     function __construct()
     {
+        
     }
 
+    /**
+     */
     function __destruct()
     {
+        
     }
 }
+
+?>

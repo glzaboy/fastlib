@@ -107,11 +107,6 @@ abstract class connect extends object implements Iconnect
         return transaction::inTransation($this->_dbhash);
     }
 
-    public function getconnect($ismaster = null)
-    {
-        return false;
-    }
-
     public function disconnect()
     {
         unset(self::$connections[$this->_dbhash]);
@@ -191,7 +186,7 @@ abstract class connect extends object implements Iconnect
         return $sth;
     }
 
-    public static function adaptor($dbcfg)
+    final public static function adaptor($dbcfg)
     {
         $s_cfg = \fl\cfg\cfg::instance('db/' . $dbcfg, 'ini');
         switch (strtolower($s_cfg->get('main', 'type'))) {
@@ -211,7 +206,7 @@ abstract class connect extends object implements Iconnect
      *            数据库链接
      * @return \fl\db\mysql\QueryBuilder|sqlite\QueryBuilder
      */
-    function getQueryerBuilder()
+    public function getQueryerBuilder()
     {
         switch ($this->type) {
             case 'mysql':

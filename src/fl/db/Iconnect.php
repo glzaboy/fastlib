@@ -45,4 +45,12 @@ interface Iconnect
      * @return boolean|\PDO
      */
     public function getslavepdo();
+
+    /**
+     * 获取connect 对象
+     *
+     * @param string $dbcfg            
+     * @return connect
+     */
+    final public static function adaptor($dbcfg);
 }
