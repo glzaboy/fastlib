@@ -52,5 +52,5 @@ interface Iconnect
      * @param string $dbcfg            
      * @return connect
      */
-    final public static function adaptor($dbcfg);
+    public static function adaptor($dbcfg);
 }
