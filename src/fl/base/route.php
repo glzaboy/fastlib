@@ -53,7 +53,7 @@ class route extends object
 
     private function getrouteclass($params = null)
     {
-        if (! FL_CLI) {
+        if (! core::iscli()) {
             if (isset($_SERVER["PATH_INFO"])) {
                 $pathinfo = ! empty($_SERVER["PATH_INFO"]) ? $_SERVER["PATH_INFO"] : "";
             } elseif (isset($_SERVER['REDIRECT_URL'])) {
@@ -91,12 +91,9 @@ class route extends object
         if (! is_dir(FL_RUNDIR . DIRECTORY_SEPARATOR . $dir)) {
             throw new \Exception("Page not found. status 404", 404);
         }
-        if ($dir != '.') {
-//             array_unshift(\fl\load::$path, FL_RUNDIR . DIRECTORY_SEPARATOR . $dir);
-        }
-        $loader=include FL_RUNDIR.'/vendor/autoload.php';
-        $routeload=realpath(FL_RUNDIR . DIRECTORY_SEPARATOR . $dir);
-        $loader->setPsr4("page\\",$routeload.'/page');
+        $loader = include FL_RUNDIR . '/vendor/autoload.php';
+        $routeload = realpath(FL_RUNDIR . DIRECTORY_SEPARATOR . $dir);
+        $loader->setPsr4("page\\", $routeload . '/page');
         $class = "page\\{$m}";
         if (! class_exists($class)) {
             throw new \Exception("Page not found. status 404.1", 404.1);

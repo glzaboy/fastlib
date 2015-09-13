@@ -23,14 +23,12 @@ if (! defined('FL_RUNDIR')) {
 define('FL_TMP', FL_RUNDIR . DIRECTORY_SEPARATOR . 'tmp');
 /**
  * Fastlib 版本信息
-*/
+ */
 define("FL_VERSION", '0.0.1');
-/**
- * 是以cil方式运行
- *
- * @var bool
-*/
-define("FL_CLI", strtolower(php_sapi_name()) == "cli" ? true : false);
+if (! fl\base\core::iscli()) {
+    header('x-powered-by: fastlib ver ' . FL_VERSION);
+    header('software: fastlib ver ' . FL_VERSION);
+}
 $cfg = \fl\cfg\cfg::instance('site', 'ini');
 define('FL_DEBUG', $cfg->get('main', 'debug'));
 if (FL_DEBUG) {

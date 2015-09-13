@@ -33,4 +33,19 @@ class core extends object
     {
         return defined('SAE_ACCESSKEY');
     }
+
+    /**
+     * 是否是CLI运行方式
+     *
+     * @return boolean
+     */
+    static public function iscli()
+    {
+        static $return = null;
+        if ($return !== null) {
+            return $return;
+        }
+        $return = strtolower(php_sapi_name()) == "cli" ? true : false;
+        return $return;
+    }
 }
