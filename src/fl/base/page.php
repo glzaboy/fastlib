@@ -89,4 +89,20 @@ class page extends object
         $class = get_class($class);
         $class = new \fl\base\thriftproxy($class, $apihost);
     }
+
+    /**
+     * 输入json格式
+     *
+     * @param mixed $data            
+     * @return string
+     */
+    public function getjson($data, $jsonoptions = 0, $callback = null)
+    {
+        header('content-type:application/json');
+        if ($callback) {
+            return $callback . '(' . json_encode($data, $jsonoptions) . ')';
+        } else {
+            return json_encode($data, $jsonoptions);
+        }
+    }
 }
