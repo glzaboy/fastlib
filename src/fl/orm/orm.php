@@ -28,6 +28,8 @@ abstract class orm extends object
     protected $releation = 'MASTER';
     // master，ONE MANY
     protected $releation_key = '';
+    // master，ONE MANY
+    protected $releation_value = 0;
     //
     private $_data = array();
 
@@ -41,7 +43,7 @@ abstract class orm extends object
 
     const RELEATION_MASTER = "MASTER";
 
-    function __construct($pk_id)
+    function __construct($pk_id, $releation = self::RELEATION_MASTER, $releation_key = null, $releation_value = 0)
     {
         $dbinfo = explode('\\', $this->getclassname());
         if (count($dbinfo) < 2) {
@@ -52,12 +54,16 @@ abstract class orm extends object
         $tabinfo = explode('_', $this->table);
         $this->pk_id = $pk_id;
         $this->pk = end($tabinfo) . '_id';
+        if ($releation) {
+            $this->releation = $releation;
+        }
+        if ($releation_key) {
+            $this->releation_key = $releation_key;
+        }
+        if ($releation_value) {
+            $this->releation_value = $releation_value;
+        }
         $this->getQueryBuilder();
-        
-        // foreach ($this->releation() as $key => $releation) {
-        // $releation_class = new $releation['class']();
-        // $this->releations_class[$key] = $releation_class;
-        // }
     }
 
     protected function getQueryBuilder()
@@ -106,30 +112,37 @@ abstract class orm extends object
         if ($this->_data) {
             return;
         }
-        switch (strtoupper($this->releation)) {
+        if ($this->gecondition()) {
+            $data = $this->select($this->gecondition());
+            foreach ($data as $d) {
+                $this->_data[] = $d;
+            }
+        }
+    }
+
+    private function gecondition()
+    {
+        switch ($this->releation) {
+            case self::RELEATION_ONE:
+                return array(
+                    $this->releation_key => $this->releation_value
+                );
+                break;
+            case self::RELEATION_MANY:
+                return array(
+                    $this->releation_key => $this->releation_value
+                );
+                break;
             case self::RELEATION_MASTER:
-                if ($this->getmastercondition()) {
-                    $data = $this->select($this->getmastercondition());
-                    foreach ($data as $d) {
-                        $this->_data[] = $d;
-                    }
-                }
+                return array(
+                    $this->pk => $this->pk_id
+                );
+                break;
+            default:
                 break;
         }
     }
 
-    function getmastercondition()
-    {
-        if ($this->pk_id) {
-            return array(
-                $this->pk => $this->pk_id
-            );
-        } else {
-            return false;
-        }
-    }
-    
-    
     public function getrelationclas($relation)
     {
         $relationinfo = $this->releation($relation);
@@ -137,7 +150,7 @@ abstract class orm extends object
             return $this->releations_class[$relation];
         }
         if (count($relationinfo) >= 2) {
-            $releation_class = new $relationinfo[0](0);
+            $releation_class = new $relationinfo[0](0, $relationinfo[1], $relationinfo[2], $this->get($relationinfo[2]));
             $this->releations_class[$relation] = $releation_class;
         }
         return $this->releations_class[$relation];
@@ -154,7 +167,7 @@ abstract class orm extends object
     public function get($key = false, $limit = 0, $page = 1)
     {
         if (! $key) {
-            $relation = self::RELEATION_MASTER;
+            $relation = $this->releation;
             $field = false;
         }
         $keys = explode('.', $key);
@@ -205,11 +218,14 @@ abstract class orm extends object
                             return array();
                         }
                         break;
+                    case self::RELEATION_MANY:
+                        return $this->_data;
+                        break;
                 }
             }
         }
-        $class=$this->getrelationclas($relation);
-        var_dump($class);
+        $class = $this->getrelationclas($relation);
+        return $class->get($field);
     }
 
     public function releation($relation = false)
