@@ -205,6 +205,8 @@ class QueryBuilder extends \fl\db\QueryBuilder
                 $sql .= ' FOR UPDATE';
             } elseif ($otherinfo['LOCK'] == self::LOCK_FOR_SHARE) {
                 $sql .= ' lock in share mode';
+            } else {
+                $sql .= ' FOR UPDATE';
             }
         }
         return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
