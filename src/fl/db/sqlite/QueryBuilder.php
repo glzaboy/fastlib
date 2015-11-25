@@ -110,12 +110,12 @@ class QueryBuilder extends \fl\db\QueryBuilder
         return $fileds;
     }
 
-    public function select($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
+    public function prepareselect($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
         foreach ($otherinfo as $k => $v) {
             $otherinfo[strtoupper($k)] = $v;
         }
-        $bindvalue = array();
+        $this->_bindvalue = array();
         if (empty($item)) {
             $item = '*';
         }
@@ -149,7 +149,7 @@ class QueryBuilder extends \fl\db\QueryBuilder
                     $tmpcondition = $this->processcondition($value, true);
                     $joinstr .= $jointtype . ' JOIN ' . $this->quotetable($key) . " ON (" . $tmpcondition['condition'] . ')';
                     foreach ($tmpcondition['bindvalue'] as $v) {
-                        array_push($bindvalue, $v);
+                        array_push($this->_bindvalue, $v);
                     }
                     unset($tmpcondition);
                 }
@@ -190,30 +190,23 @@ class QueryBuilder extends \fl\db\QueryBuilder
             $condition = $this->processcondition($condition);
             if (count($condition['bindvalue'])) {
                 foreach ($condition['bindvalue'] as $v) {
-                    array_push($bindvalue, $v);
+                    array_push($this->_bindvalue, $v);
                 }
             }
             $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby;
-            $sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby . ' ' . $orderby . $limit;
+            $this->_sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' WHERE ' . $condition['condition'] . ' ' . $groupby . ' ' . $orderby . $limit;
         } else {
-            $sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
+            $this->_sql = "SELECT {$item} FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby . ' ' . $orderby . $limit;
             $this->_counsql = "SELECT {$item},count(1) as `count` FROM " . $this->quotetable($table) . $joinstr . ' ' . $groupby;
         }
-        $this->_counbindvalue = $bindvalue;
+        $this->_counbindvalue = $this->_bindvalue;
         if (isset($otherinfo['LOCK'])) {
             if ($otherinfo['LOCK'] == self::LOCK_FOR_WRITE) {
-                $sql .= ' FOR UPDATE';
+                $this->_sql .= ' FOR UPDATE';
             } elseif ($otherinfo['LOCK'] == self::LOCK_FOR_SHARE) {
-                $sql .= ' lock in share mode';
+                $this->_sql .= ' lock in share mode';
             }
         }
-        return $this->_connect->query($sql, $bindvalue, $this->_connect->intransaction());
-    }
-
-    public function selectcount()
-    {
-        $data = $this->_connect->query($this->_counsql, $this->_counbindvalue, $this->_connect->intransaction())
-            ->fetch();
-        return $data['count'];
+        return $this;
     }
 }

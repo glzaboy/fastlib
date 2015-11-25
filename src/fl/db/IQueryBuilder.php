@@ -78,10 +78,20 @@ Interface IQueryBuilder
      * @param array $join
      *            联表
      * @param array $otherinfo            
-     * @return \PDOStatement
+     * @return QueryBuilder
      */
-    public function select($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array());
-
+    public function prepareselect($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array());
+    /**
+     * 查询数据
+     * @return \PDOStatement|false
+     */
+    public function select();
+    /**
+     * 获取返回数据
+     * 
+     * @return array 
+     */
+    public function selectdata(); 
     /**
      * 返回select 不还limit条件条数
      *

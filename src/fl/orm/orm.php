@@ -69,19 +69,19 @@ abstract class orm extends object
 
     /**
      * model data
-     * 
+     *
      * @var array
      */
     private $_data = array();
 
     /**
      * data new state
-     * 
+     *
      * @var array
      */
     private $_newdata = array();
-    
-    private $is_merge=true;
+
+    private $is_merge = true;
 
     protected $releations_class = array();
 
@@ -93,7 +93,7 @@ abstract class orm extends object
 
     const RELEATION_MASTER = "MASTER";
 
-    function __construct($pk_id, $releation = self::RELEATION_MASTER, $releation_key = null, $releation_value = 0)
+    function __construct($pk_id = 0, $releation = self::RELEATION_MASTER, $releation_key = null, $releation_value = 0)
     {
         $dbinfo = explode('\\', $this->getclassname());
         if (count($dbinfo) < 2) {
@@ -154,13 +154,39 @@ abstract class orm extends object
      */
     public function select($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
-        return $this->QueryBuilder->select($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo);
+        return $this->getQueryBuilder()->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
+            ->select();
+    }
+
+    /**
+     * 选择数据库记录
+     *
+     * @param string|array $condition
+     *            条件
+     * @param string|array $item
+     *            字段
+     * @param string|array $orderby
+     *            排序
+     * @param string|array $groupby
+     *            分组
+     * @param array $join
+     *            联表
+     * @param array $otherinfo            
+     * @return array
+     */
+    public function selectdata($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
+    {
+        return $this->QueryBuilder->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
+            ->selectdata();
     }
 
     private function getdata()
     {
         if ($this->_data) {
-            if (in_array($this->releation, array(self::RELEATION_MASTER,self::RELEATION_ONE)) && $this->is_merge == false && $this->_newdata) {
+            if (in_array($this->releation, array(
+                self::RELEATION_MASTER,
+                self::RELEATION_ONE
+            )) && $this->is_merge == false && $this->_newdata) {
                 foreach ($this->_newdata as $key => $val) {
                     $this->_data[0][$key] = $val;
                 }
@@ -168,10 +194,7 @@ abstract class orm extends object
             return;
         }
         if ($this->gecondition()) {
-            $data = $this->select($this->gecondition());
-            foreach ($data as $d) {
-                $this->_data[] = $d;
-            }
+            $this->_data = $this->selectdata($this->gecondition());
         }
     }
 
@@ -310,7 +333,10 @@ abstract class orm extends object
 
     public function set($key, $value)
     {
-        if (!in_array($this->releation, array(self::RELEATION_MASTER,self::RELEATION_ONE))) {
+        if (! in_array($this->releation, array(
+            self::RELEATION_MASTER,
+            self::RELEATION_ONE
+        ))) {
             throw new \Exception("set not supprt MANY releation");
         }
         $this->is_merge = false;

@@ -54,28 +54,42 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
     protected $_connect = null;
 
     /**
-     * 数据库链接
+     * 统计条数 sql
      *
      * @var string
      */
     protected $_counsql = '';
 
     /**
-     * 数据库链接
+     * 统计条数 bind
      *
      * @var array
      */
     protected $_counbindvalue = array();
 
     /**
-     * 数据库链接
+     * SQL
+     *
+     * @var string
+     */
+    protected $_sql = '';
+
+    /**
+     * SQL bind
+     *
+     * @var array
+     */
+    protected $_bindvalue = array();
+
+    /**
+     * page
      *
      * @var int
      */
     protected $_ipage = 0;
 
     /**
-     * 数据库链接
+     * limit
      *
      * @var int
      */
@@ -210,5 +224,27 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
     {
         $this->_ipage = intval($ipage);
         $this->_ilimit = intval($ilimit);
+    }
+
+    public function select()
+    {
+        return $this->_connect->query($this->_sql, $this->_bindvalue, $this->_connect->intransaction());
+    }
+
+    public function selectdata()
+    {
+        $PDOStatement = $this->_connect->query($this->_sql, $this->_bindvalue, $this->_connect->intransaction());
+        $return = array();
+        foreach ($PDOStatement as $val) {
+            array_push($return, $val);
+        }
+        return $return;
+    }
+
+    public function selectcount()
+    {
+        $data = $this->_connect->query($this->_counsql, $this->_counbindvalue, $this->_connect->intransaction())
+            ->fetch();
+        return $data['count'];
     }
 }
