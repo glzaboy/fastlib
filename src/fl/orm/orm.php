@@ -137,6 +137,16 @@ abstract class orm extends object
     }
 
     /**
+     * 获取数据表名
+     *
+     * @return string|mixed
+     */
+    public function setpager($limit = 10, $page = 1)
+    {
+        return $this->getQueryBuilder()->setpager($limit, $page);
+    }
+
+    /**
      * 选择数据库记录
      *
      * @param string|array $condition
@@ -154,7 +164,8 @@ abstract class orm extends object
      */
     public function select($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
-        return $this->getQueryBuilder()->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
+        return $this->getQueryBuilder()
+            ->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
             ->select();
     }
 
@@ -176,7 +187,8 @@ abstract class orm extends object
      */
     public function selectdata($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
-        return $this->QueryBuilder->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
+        return $this->getQueryBuilder()
+            ->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
             ->selectdata();
     }
 

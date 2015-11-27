@@ -136,7 +136,6 @@ abstract class connect extends object implements Iconnect
         if (! $sth) {
             return false;
         }
-        $sth->setFetchMode(\PDO::FETCH_ASSOC);
         return $sth;
     }
 
@@ -179,6 +178,7 @@ abstract class connect extends object implements Iconnect
                 $sth->bindValue($k + 1, $v);
             }
         }
+        $sth->setFetchMode(\PDO::FETCH_ASSOC);
         if (! $sth->execute()) {
             $errInfo = $sth->errorInfo();
             throw new \PDOException("SQL ERROR." . $sql . ' BIND params :' . var_export($bindparams, true) . $errInfo[2], - 1);
@@ -188,16 +188,21 @@ abstract class connect extends object implements Iconnect
 
     final public static function adaptor($dbcfg)
     {
+        static $dbconnetc = array();
+        if (isset($dbconnetc[$dbcfg])) {
+            return $dbconnetc[$dbcfg];
+        }
         $s_cfg = \fl\cfg\cfg::instance('db/' . $dbcfg, 'ini');
         switch (strtolower($s_cfg->get('main', 'type'))) {
             case 'mysql':
-                return new mysql\connect($dbcfg);
+                $dbconnetc[$dbcfg] = new mysql\connect($dbcfg);
                 break;
             case 'sqlite':
-                return new sqlite\connect($dbcfg);
+                $dbconnetc[$dbcfg] = new sqlite\connect($dbcfg);
                 break;
             default:
         }
+        return $dbconnetc[$dbcfg];
     }
 
     /**

@@ -212,14 +212,6 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
         return $return;
     }
 
-    /**
-     * 设置数据分页
-     *
-     * @param number $ilimit
-     *            限制返回条数
-     * @param number $ipage
-     *            数据页码
-     */
     public function setpager($ilimit = 10, $ipage = 1)
     {
         $this->_ipage = intval($ipage);

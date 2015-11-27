@@ -63,6 +63,16 @@ Interface IQueryBuilder
     public function delete($table, $condition = null);
 
     /**
+     * 设置数据分页
+     *
+     * @param number $ilimit
+     *            限制返回条数
+     * @param number $ipage
+     *            数据页码
+     */
+    public function setpager($ilimit = 10, $ipage = 1);
+
+    /**
      * 选择数据库记录
      *
      * @param string $table
@@ -81,17 +91,21 @@ Interface IQueryBuilder
      * @return QueryBuilder
      */
     public function prepareselect($table, $condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array());
+
     /**
      * 查询数据
+     * 
      * @return \PDOStatement|false
      */
     public function select();
+
     /**
      * 获取返回数据
-     * 
-     * @return array 
+     *
+     * @return array
      */
-    public function selectdata(); 
+    public function selectdata();
+
     /**
      * 返回select 不还limit条件条数
      *
