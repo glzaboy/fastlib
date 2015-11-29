@@ -29,7 +29,7 @@ if (! fl\base\core::iscli()) {
     header('x-powered-by: fastlib ver ' . FL_VERSION);
     header('software: fastlib ver ' . FL_VERSION);
 }
-$cfg = \fl\cfg\cfg::instance('site', 'ini');
+$cfg = \fl\cfg\cfg::getcfgobj('site', 'ini');
 define('FL_DEBUG', $cfg->get('main', 'debug'));
 if (FL_DEBUG) {
     error_reporting((E_ALL | E_STRICT) & ~ E_NOTICE);

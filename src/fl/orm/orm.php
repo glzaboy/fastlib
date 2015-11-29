@@ -116,13 +116,12 @@ abstract class orm extends object
         $this->getQueryBuilder();
     }
 
-    protected function getQueryBuilder()
+    public function getQueryBuilder()
     {
         if ($this->QueryBuilder) {
             return $this->QueryBuilder;
         }
-        $db = \fl\db\connect::adaptor($this->dbcfg);
-        $this->QueryBuilder = $db->getQueryerBuilder();
+        $this->QueryBuilder = \fl\db\connect::getQueryerBuilder($this->dbcfg);
         return $this->QueryBuilder;
     }
 
@@ -143,7 +142,7 @@ abstract class orm extends object
      */
     public function setpager($limit = 10, $page = 1)
     {
-        return $this->getQueryBuilder()->setpager($limit, $page);
+        return $this->QueryBuilder->setpager($limit, $page);
     }
 
     /**
@@ -164,8 +163,7 @@ abstract class orm extends object
      */
     public function select($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
-        return $this->getQueryBuilder()
-            ->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
+        return $this->QueryBuilder->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
             ->select();
     }
 
@@ -187,8 +185,7 @@ abstract class orm extends object
      */
     public function selectdata($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
-        return $this->getQueryBuilder()
-            ->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
+        return $this->QueryBuilder->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
             ->selectdata();
     }
 

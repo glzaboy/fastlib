@@ -47,10 +47,11 @@ interface Iconnect
     public function getslavepdo();
 
     /**
-     * 获取connect 对象
+     * 获取QueryBuilder 对象
      *
      * @param string $dbcfg            
-     * @return connect
+     * @return \fl\db\mysql\QueryBuilder|sqlite\QueryBuilder
      */
-    public static function adaptor($dbcfg);
+    public static function getQueryerBuilder($dbcfg);
+    
 }

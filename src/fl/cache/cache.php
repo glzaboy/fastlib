@@ -19,13 +19,13 @@ abstract class cache extends object implements Icache
      * @throws cacheException
      * @return Ambigous <>|Ambigous <\fl\cache\icache>
      */
-    public static function instance($cacheType = null)
+    public static function getcacheobj($cacheType = null)
     {
         static $cacheMap = array();
         if (\fl\base\core::isSae()) {
             $cacheType = 'sae';
         } else {
-            $s_cfg = \fl\cfg\cfg::instance('cache', 'ini');
+            $s_cfg = \fl\cfg\cfg::getcfgobj('cache', 'ini');
             $defaultType = $s_cfg->get('main', 'default');
             $cacheType = $cacheType ? $cacheType : $defaultType;
         }

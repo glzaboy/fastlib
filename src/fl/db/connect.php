@@ -69,7 +69,7 @@ abstract class connect extends object implements Iconnect
         if (! is_string($dbcfg)) {
             return false;
         }
-        $this->cfg = \fl\cfg\cfg::instance('db/' . $dbcfg, 'ini');
+        $this->cfg = \fl\cfg\cfg::getcfgobj('db/' . $dbcfg, 'ini');
         $this->_dbhash = $dbcfg;
         $this->type = $this->cfg->get('main', 'type');
         $this->prefix = $this->cfg->get('main', 'prefix');
@@ -186,41 +186,22 @@ abstract class connect extends object implements Iconnect
         return $sth;
     }
 
-    final public static function adaptor($dbcfg)
+    final public static function getQueryerBuilder($dbcfg)
     {
-        static $dbconnetc = array();
-        if (isset($dbconnetc[$dbcfg])) {
-            return $dbconnetc[$dbcfg];
+        static $querybuilder = array();
+        if (isset($querybuilder[$dbcfg])) {
+            return $querybuilder[$dbcfg];
         }
-        $s_cfg = \fl\cfg\cfg::instance('db/' . $dbcfg, 'ini');
+        $s_cfg = \fl\cfg\cfg::getcfgobj('db/' . $dbcfg, 'ini');
         switch (strtolower($s_cfg->get('main', 'type'))) {
             case 'mysql':
-                $dbconnetc[$dbcfg] = new mysql\connect($dbcfg);
+                $querybuilder[$dbcfg] = new mysql\QueryBuilder(new mysql\connect($dbcfg));
                 break;
             case 'sqlite':
-                $dbconnetc[$dbcfg] = new sqlite\connect($dbcfg);
+                $querybuilder[$dbcfg] = new sqlite\QueryBuilder(new sqlite\connect($dbcfg));
                 break;
             default:
         }
-        return $dbconnetc[$dbcfg];
-    }
-
-    /**
-     *
-     * @param \fl\db\connect $connnect
-     *            数据库链接
-     * @return \fl\db\mysql\QueryBuilder|sqlite\QueryBuilder
-     */
-    public function getQueryerBuilder()
-    {
-        switch ($this->type) {
-            case 'mysql':
-                return new mysql\QueryBuilder($this);
-                break;
-            case 'sqlite':
-                return new sqlite\QueryBuilder($this);
-                break;
-            default:
-        }
+        return $querybuilder[$dbcfg];
     }
 }

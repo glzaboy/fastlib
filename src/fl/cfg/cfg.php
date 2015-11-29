@@ -108,7 +108,7 @@ abstract class cfg extends object implements Icfg
      *            数据格式
      * @return \fl\cfg\icfg|boolean
      */
-    public static function instance($uri, $format = 'json')
+    public static function getcfgobj($uri, $format = 'json')
     {
         switch (strtolower($format)) {
             case 'php':
