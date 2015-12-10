@@ -48,7 +48,7 @@ class QueryBuilder extends \fl\db\QueryBuilder
         if ($affected === false) {
             return false;
         }
-        $lastInsertId = $this->_connect->getconnect(true)->lastInsertId();
+        $lastInsertId = $this->_connect->getmasterpdo()->lastInsertId();
         return $lastInsertId ? $lastInsertId : $affected;
     }
 

@@ -2,6 +2,7 @@
 namespace fl\orm;
 
 use fl\base\object;
+use fl\thrift\thrift;
 
 /**
  *
@@ -35,14 +36,14 @@ abstract class orm extends object
     /**
      * pk id
      *
-     * @var int
+     * @var int|string
      */
     protected $pk_id = '';
 
     /**
      * pkname
      *
-     * @var unknown
+     * @var string
      */
     protected $pk = '';
 
@@ -189,25 +190,33 @@ abstract class orm extends object
             ->selectdata();
     }
 
-    private function getdata()
+    private function mergedata($cleartmp = false)
     {
-        if ($this->_data) {
-            if (in_array($this->releation, array(
-                self::RELEATION_MASTER,
-                self::RELEATION_ONE
-            )) && $this->is_merge == false && $this->_newdata) {
-                foreach ($this->_newdata as $key => $val) {
-                    $this->_data[0][$key] = $val;
-                }
+        if ($this->is_merge === false) {
+            foreach ($this->_newdata as $key => $val) {
+                $this->_data[0][$key] = $val;
             }
-            return;
+            $this->is_merge = true;
         }
-        if ($this->gecondition()) {
-            $this->_data = $this->selectdata($this->gecondition());
+        if ($cleartmp) {
+            $this->_newdata = array();
         }
     }
 
-    private function gecondition()
+    private function getdata()
+    {
+        if (! $this->_data) {
+            $this->_data = $this->selectdata($this->getcondition());
+        }
+        if (in_array($this->releation, array(
+            self::RELEATION_MASTER,
+            self::RELEATION_ONE
+        )) && $this->is_merge == false) {
+            $this->mergedata(false);
+        }
+    }
+
+    private function getcondition()
     {
         switch ($this->releation) {
             case self::RELEATION_ONE:
@@ -230,6 +239,11 @@ abstract class orm extends object
         }
     }
 
+    /**
+     *
+     * @param string $relation            
+     * @return orm
+     */
     public function getrelationclas($relation)
     {
         $relationinfo = $this->releation($relation);
@@ -244,6 +258,44 @@ abstract class orm extends object
     }
 
     /**
+     * key2releation
+     * 返回key到rel关系
+     *
+     * @param array $key            
+     */
+    private function key2rel($key)
+    {
+        if (! $key) {
+            $relation = $this->releation;
+            $field = null;
+        }
+        $keys = explode('.', $key);
+        if (count($keys) == 1) {
+            if ($keys[0] && $this->releation($keys[0])) {
+                $relation = $keys[0];
+                $field = null;
+            } else {
+                $relation = self::RELEATION_MASTER;
+                $field = $keys[0];
+            }
+        }
+        if (count($keys) == 2) {
+            if ($keys[0] && $this->releation($keys[0])) {
+                $relation = $keys[0];
+                $field = $keys[1];
+            } else {
+                $relation = self::RELEATION_MASTER;
+                $field = $keys[0];
+            }
+        }
+        return array(
+            $relation,
+            $field
+        );
+    }
+
+    /**
+     * 获取数据
      *
      * @param string $key
      *            'releation.field'
@@ -255,33 +307,7 @@ abstract class orm extends object
     {
         $this->getdata();
         if ($this->releation == self::RELEATION_MASTER) {
-            if (! $key) {
-                $relation = $this->releation;
-                $field = false;
-            }
-            $keys = explode('.', $key);
-            if (count($keys) == 1) {
-                if ($keys[0] && $this->releation($keys[0])) {
-                    $relation = $keys[0];
-                    $field = false;
-                } else {
-                    $relation = self::RELEATION_MASTER;
-                    $field = $keys[0];
-                }
-            }
-            if (count($keys) == 2) {
-                if ($keys[0] && $this->releation($keys[0])) {
-                    $relation = $keys[0];
-                    $field = $keys[1];
-                } else {
-                    $relation = self::RELEATION_MASTER;
-                    $field = $keys[0];
-                }
-            }
-            if (count($keys) >= 3) {
-                $this->setError('key not exists');
-                return false;
-            }
+            list ($relation, $field) = $this->key2rel($key);
             if ($relation == self::RELEATION_MASTER) {
                 if ($field) {
                     if (isset($this->_data[0][$field])) {
@@ -333,27 +359,116 @@ abstract class orm extends object
         }
     }
 
+    /**
+     * 设置数据
+     *
+     * @param unknown $data            
+     * @throws \Exception
+     */
     public function setdata($data)
     {
-        foreach ($data as $key => $value) {
-            $this->set($key, $value);
+        if ($this->releation == self::RELEATION_MASTER) {
+            foreach ($data as $key => $value) {
+                $this->set($key, $value);
+            }
+        } else {
+            throw new \Exception('setdata only support master releation');
         }
     }
 
     public function set($key, $value)
     {
-        if (! in_array($this->releation, array(
-            self::RELEATION_MASTER,
-            self::RELEATION_ONE
-        ))) {
-            throw new \Exception("set not supprt MANY releation");
+        if ($this->releation == self::RELEATION_MASTER) {
+            list ($relation, $field) = $this->key2rel($key);
+            if ($relation == self::RELEATION_MASTER) {
+                if ($field) {
+                    $this->is_merge = false;
+                    $this->_newdata[$key] = $value;
+                    return true;
+                }
+            }
+            if ($relation) {
+                $class = $this->getrelationclas($relation);
+                if ($class) {
+                    return $class->set($field, $value);
+                }
+            }
+        } else {
+            switch ($this->releation) {
+                case self::RELEATION_ONE:
+                    $this->is_merge = false;
+                    $this->_newdata[$key] = $value;
+                    return true;
+                    break;
+                case self::RELEATION_MANY:
+                    throw new \Exception("set not supprt MANY releation");
+                    return false;
+                    break;
+            }
         }
-        $this->is_merge = false;
-        $this->_newdata[$key] = $value;
+    }
+
+    public function getdbcfg()
+    {
+        if ($this->releation == self::RELEATION_MASTER) {
+            $return = array();
+            array_push($return, $this->dbcfg);
+            foreach ($this->releation() as $releation) {
+                $dbinfo = explode('\\', $releation[0]);
+                array_pop($dbinfo);
+                array_push($return, array_pop($dbinfo));
+            }
+            return array_unique($return);
+        } else {
+            return $this->dbcfg;
+        }
     }
 
     public function save()
-    {}
+    {
+        if ($this->releation == self::RELEATION_MASTER) {
+            if ($this->_newdata) {
+                $pk_id = $this->get($this->pk);
+                if (! $pk_id) {
+                    if ($this->pk_id) {
+                        $this->_newdata[$this->pk] = $this->pk_id;
+                    }
+                    $this->pk_id = $this->QueryBuilder->insert($this->table, $this->_newdata);
+                    $this->_data[0][$this->pk] = $this->pk_id; // set pkid;
+                } else {
+                    $this->QueryBuilder->update($this->table, $this->_newdata, array(
+                        $this->pk => $pk_id
+                    ));
+                }
+                $this->mergedata(true);
+            }
+            $pk_id = $this->get($this->pk);
+            if ($pk_id) {
+                foreach ($this->releation() as $key => $val) {
+                    $class = $this->getrelationclas($key);
+                    if ($class->_newdata && $class->releation == self::RELEATION_ONE) {
+                        $condition = $class->getcondition();
+                        foreach ($condition as $key => $val) {
+                            $class->set($key, $this->get($key));
+                        }
+                        $class->save();
+                    }
+                }
+            }
+        } elseif ($this->releation == self::RELEATION_ONE) {
+            if ($this->_newdata) {
+                $pk_id = $this->get($this->pk);
+                if (! $pk_id) {
+                    $this->pk_id = $this->QueryBuilder->insert($this->table, $this->_newdata);
+                } else {
+                    $this->QueryBuilder->update($this->table, $this->_newdata, array(
+                        $this->pk => $pk_id
+                    ));
+                }
+                $this->mergedata(true);
+            }
+        }
+    }
 
     public function releation($relation = false)
     {
