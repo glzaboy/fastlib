@@ -94,7 +94,7 @@ Interface IQueryBuilder
 
     /**
      * 查询数据
-     * 
+     *
      * @return \PDOStatement|false
      */
     public function select();
@@ -112,4 +112,11 @@ Interface IQueryBuilder
      * @return int
      */
     public function selectcount();
+
+    /**
+     * 返回链接
+     * 
+     * @return \fl\db\Iconnect
+     */
+    public function getconnect();
 }

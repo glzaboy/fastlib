@@ -13,6 +13,20 @@ abstract class orm extends object
 {
 
     /**
+     * 锁定只允许读取
+     *
+     * @var int
+     */
+    const LOCK_FOR_SHARE = 1;
+
+    /**
+     * 锁定不允许读取
+     *
+     * @var int
+     */
+    const LOCK_FOR_WRITE = 2;
+
+    /**
      * 数据库配置
      *
      * @var string
@@ -84,6 +98,13 @@ abstract class orm extends object
 
     private $is_merge = true;
 
+    /**
+     * 是否读写锁定
+     *
+     * @var bool
+     */
+    private $lockType = false;
+
     protected $releations_class = array();
 
     protected $_map = array();
@@ -115,6 +136,17 @@ abstract class orm extends object
             $this->releation_value = $releation_value;
         }
         $this->getQueryBuilder();
+    }
+
+    public function setlock($lockType)
+    {
+        switch ($this->lockType) {
+            case self::LOCK_FOR_WRITE:
+            case self::LOCK_FOR_SHARE:
+                $this->lockType = $lockType;
+                break;
+            default:
+        }
     }
 
     public function getQueryBuilder()
@@ -186,6 +218,13 @@ abstract class orm extends object
      */
     public function selectdata($condition = null, $item = "*", $orderby = array(), $groupby = array(), $join = array(), $otherinfo = array())
     {
+        switch ($this->lockType) {
+            case self::LOCK_FOR_WRITE:
+            case self::LOCK_FOR_SHARE:
+                $otherinfo['LOCK'] = $this->lockType;
+                break;
+            default:
+        }
         return $this->QueryBuilder->prepareselect($this->gettable(), $condition, $item, $orderby, $groupby, $join, $otherinfo)
             ->selectdata();
     }

@@ -239,4 +239,9 @@ abstract class QueryBuilder extends \fl\base\object implements IQueryBuilder
             ->fetch();
         return $data['count'];
     }
+
+    public function getconnect()
+    {
+        return $this->_connect;
+    }
 }

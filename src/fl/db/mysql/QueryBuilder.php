@@ -2,14 +2,14 @@
 namespace fl\db\mysql;
 
 /**
- *
+ * Mysql
+ * 
  * @author Administrator
  *        
  */
 class QueryBuilder extends \fl\db\QueryBuilder
 {
-    // TODO - Insert your code here
-    
+
     /**
      */
     function __construct($connnect)
@@ -74,6 +74,7 @@ class QueryBuilder extends \fl\db\QueryBuilder
         }
         $affected = $this->_connect->exec($sql, $bindvalue, true);
         if ($affected === false) {
+            throw new \Exception();
             return false;
         }
         return $affected;

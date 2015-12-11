@@ -20,23 +20,43 @@ class transaction extends object
      */
     static $_inTransaction = false;
 
-    static function beginTransaction($dbArray = array())
+    static public function beginTransaction()
     {
-        if (! is_array($dbArray)) {
-            return false;
-        }
-        self::$_Transactions = $dbArray;
-        foreach (\fl\db\connect::$connections as $dbhash => $connect) {
-            if (in_array($dbhash, self::$_Transactions)) {
-                $connect = new \fl\db\connect($dbhash);
-                $connect->beginTransaction();
-            }
-        }
+        self::$_Transactions = array();
+        // foreach (\fl\db\connect::$connections as $dbhash => $connect) {
+        // if (in_array($dbhash, self::$_Transactions)) {
+        // $connect = new \fl\db\connect($dbhash);
+        // $connect->beginTransaction();
+        // }
+        // }
         \fl\helpers\hook::register('DB:AfterConnect', "Transaction", array(
             '\fl\db\transaction',
             'checkTransaction'
         ));
         self::$_inTransaction = true;
+    }
+
+    /**
+     *
+     * @param array $dbcfgs            
+     */
+    static public function addtoTransaction($dbcfgs)
+    {
+        if (! self::$_inTransaction) {
+            throw new \PDOException("Not in Transaction", - 100);
+        }
+        foreach ($dbcfgs as $dbcfg) {
+            if (in_array($dbcfg, self::$_Transactions)) {
+                continue;
+            }
+            array_push(self::$_Transactions, $dbcfg);
+            foreach (\fl\db\connect::$connections as $dbhash => $connect) {
+                if ($dbcfg == $dbhash) {
+                    $QueryBuilder = \fl\db\connect::getQueryerBuilder($dbhash);
+                    $QueryBuilder->getconnect()->beginTransaction();
+                }
+            }
+        }
     }
 
     static function rollback()
@@ -46,8 +66,8 @@ class transaction extends object
         }
         foreach (\fl\db\connect::$connections as $dbhash => $connect) {
             if (in_array($dbhash, self::$_Transactions)) {
-                $connect = new \fl\db\connect($dbhash);
-                $connect->rollback();
+                $QueryBuilder = \fl\db\connect::getQueryerBuilder($dbhash);
+                $QueryBuilder->getconnect()->rollback();
             }
         }
         \fl\helpers\hook::unregister('DB:AfterConnect', "Transaction");
@@ -60,8 +80,8 @@ class transaction extends object
         }
         foreach (\fl\db\connect::$connections as $dbhash => $connect) {
             if (in_array($dbhash, self::$_Transactions)) {
-                $connect = new \fl\db\connect($dbhash);
-                $connect->commint();
+                $QueryBuilder = \fl\db\connect::getQueryerBuilder($dbhash);
+                $QueryBuilder->getconnect()->commint();
             }
         }
         \fl\helpers\hook::unregister('DB:AfterConnect', "Transaction");
@@ -85,8 +105,8 @@ class transaction extends object
         if (! $isMaster) {
             return;
         }
-        $connect = \fl\db\connect::adaptor($dbhash);
-        $connect->beginTransaction();
+        $QueryBuilder = \fl\db\connect::getQueryerBuilder($dbhash);
+        $QueryBuilder->getconnect()->beginTransaction();
     }
 
     /**
@@ -100,7 +120,7 @@ class transaction extends object
     {
         if (in_array($dbhash, self::$_Transactions)) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
