@@ -532,15 +532,26 @@ class wechat extends object
      *
      * @return boolean
      */
-    private function checksignature()
+    private function checkSignature()
     {
-        $pc = new Prpcrypt1($this->EncodingAESKey);
-        $signature = $this->getSHA1($this->token, $_REQUEST['timestamp'], $_REQUEST['nonce'], $_REQUEST['echostr']);
-        if ($signature != $_REQUEST['msg_signature']) {
-            return "msg_signature error! GET {$_REQUEST['msg_signature']} calc {$signature}";
+        $signature = $_GET["signature"];
+        $timestamp = $_GET["timestamp"];
+        $nonce = $_GET["nonce"];
+        $token = TOKEN;
+        $tmpArr = array(
+            $token,
+            $timestamp,
+            $nonce
+        );
+        sort($tmpArr, SORT_STRING);
+        $tmpStr = implode($tmpArr);
+        $tmpStr = sha1($tmpStr);
+        
+        if ($tmpStr == $signature) {
+            return true;
+        } else {
+            return false;
         }
-        $result = $pc->decrypt($_REQUEST['echostr'], $this->appid);
-        return $result;
     }
 
     private function encryptMessage($message)
