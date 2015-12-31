@@ -537,7 +537,7 @@ class wechat extends object
         $signature = $_GET["signature"];
         $timestamp = $_GET["timestamp"];
         $nonce = $_GET["nonce"];
-        $token = TOKEN;
+        $token = $this->token;
         $tmpArr = array(
             $token,
             $timestamp,
